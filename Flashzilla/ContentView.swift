@@ -20,6 +20,7 @@ struct ContentView: View {
     
     @State private var cards = [Card]()
     @State private var showingEditScreen = false
+    @State private var offset = CGSize.zero
     
     @State private var timeRemaining = 100
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -37,7 +38,11 @@ struct ContentView: View {
             VStack {
                 Text("Time: \(timeRemaining)")
                     .font(.largeTitle)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(
+                        timeRemaining > 70 ? .white
+                        : timeRemaining > 50 ? .yellow
+                        : .red
+                    )
                     .padding(.horizontal, 20)
                     .padding(.vertical, 5)
                     .background(.black.opacity(0.75))
@@ -94,6 +99,7 @@ struct ContentView: View {
                         Button {
                             withAnimation {
                                 removeCard(at: cards.count - 1)
+//                                cards.insert(Card, at: 0)
                             }
                         } label: {
                             Image(systemName: "xmark.circle")
@@ -148,17 +154,25 @@ struct ContentView: View {
     func removeCard(at index: Int) {
         guard index >= 0 else { return }
         
-        cards.remove(at: index)
+        let removedCard = cards.remove(at: index)
+        
+        if offset.width < -100 {
+            cards.append(removedCard)
+        }
         
         if cards.isEmpty {
             isActive = false
         }
     }
     
+    
+    
     func resetCards() {
-        timeRemaining = 100
+        withAnimation {
+            timeRemaining = 100
+            loadData()
+        }
         isActive = true
-        loadData()
     }
     
     func loadData() {
